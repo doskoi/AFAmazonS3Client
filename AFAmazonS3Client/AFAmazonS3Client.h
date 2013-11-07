@@ -197,6 +197,12 @@
                    success:(void (^)(id responseObject))success
                    failure:(void (^)(NSError *error))failure;
 
+- (void)postObjectWithData:(NSData *)data
+           destinationPath:(NSString *)destinationPath
+                parameters:(NSDictionary *)parameters
+                  progress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))progress
+                   success:(void (^)(id responseObject))success
+                   failure:(void (^)(NSError *error))failure;
 /**
  Adds an object to a bucket for a user that has write access to the bucket. A success response indicates the object was successfully stored; if the object already exists, it will be overwritten.
  
@@ -208,6 +214,13 @@
  @param failure A block object to be executed when the request operation finishes unsuccessfully, or that finishes successfully, but encountered an error while parsing the response data. This block has no return value and takes a single argument: the `NSError` object describing error that occurred.
  */
 - (void)putObjectWithFile:(NSString *)path
+          destinationPath:(NSString *)destinationPath
+               parameters:(NSDictionary *)parameters
+                 progress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))progress
+                  success:(void (^)(id responseObject))success
+                  failure:(void (^)(NSError *error))failure;
+
+- (void)putObjectWithData:(NSData *)data
           destinationPath:(NSString *)destinationPath
                parameters:(NSDictionary *)parameters
                  progress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))progress

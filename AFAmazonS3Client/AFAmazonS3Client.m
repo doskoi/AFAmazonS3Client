@@ -196,8 +196,8 @@ NSString * AFBase64EncodedStringFromData(NSData *data) {
 			[mutableCanonicalizedAMZHeaderString appendFormat:@"%@:%@\n", key, value];
 		}
 
-        NSString *canonicalizedResource = [NSString stringWithFormat:@"/%@%@", self.bucket, request.URL.path];
-    	NSString *method = [request HTTPMethod];
+		NSString *canonicalizedResource = [NSString stringWithFormat:@"/%@%@", self.bucket, request.URL.path];
+		NSString *method = [request HTTPMethod];
 		NSString *contentMD5 = [request valueForHTTPHeaderField:@"Content-MD5"];
 		NSString *contentType = [request valueForHTTPHeaderField:@"Content-Type"];
 		NSString *date = AFRFC822FormatStringFromDate([NSDate date]);
@@ -343,6 +343,15 @@ NSString * AFBase64EncodedStringFromData(NSData *data) {
     [self setObjectWithMethod:@"POST" file:path destinationPath:destinationPath parameters:parameters progress:progress success:success failure:failure];
 }
 
+- (void)postObjectWithData:(NSData *)data
+           destinationPath:(NSString *)destinationPath
+                parameters:(NSDictionary *)parameters
+                  progress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))progress
+                   success:(void (^)(id responseObject))success
+                   failure:(void (^)(NSError *error))failure {
+    [self setObjectWithMethod:@"POST" data:data destinationPath:destinationPath parameters:parameters progress:progress success:success failure:failure];
+}
+
 - (void)putObjectWithFile:(NSString *)path
           destinationPath:(NSString *)destinationPath
                parameters:(NSDictionary *)parameters
@@ -351,6 +360,15 @@ NSString * AFBase64EncodedStringFromData(NSData *data) {
                   failure:(void (^)(NSError *error))failure
 {
     [self setObjectWithMethod:@"PUT" file:path destinationPath:destinationPath parameters:parameters progress:progress success:success failure:failure];
+}
+
+- (void)putObjectWithData:(NSData *)data
+          destinationPath:(NSString *)destinationPath
+               parameters:(NSDictionary *)parameters
+                 progress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))progress
+                  success:(void (^)(id responseObject))success
+                  failure:(void (^)(NSError *error))failure {
+  [self setObjectWithMethod:@"PUT" data:data destinationPath:destinationPath parameters:parameters progress:progress success:success failure:failure];
 }
 
 - (void)deleteObjectWithPath:(NSString *)path
@@ -397,6 +415,34 @@ NSString * AFBase64EncodedStringFromData(NSData *data) {
 		
         [self enqueueHTTPRequestOperation:requestOperation];
     }
+}
+
+- (void)setObjectWithMethod:(NSString *)method
+                       data:(NSData *)data
+            destinationPath:(NSString *)destinationPath
+                 parameters:(NSDictionary *)parameters
+                   progress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))progress
+                    success:(void (^)(id responseObject))success
+                    failure:(void (^)(NSError *error))failure {  
+  NSMutableURLRequest *request = [super requestWithMethod:method path:destinationPath parameters:nil];
+  [[self authorizationHeadersForRequest:request] enumerateKeysAndObjectsUsingBlock:^(id field, id value, BOOL *stop) {
+    [request setValue:value forHTTPHeaderField:field];
+  }];
+  [request setHTTPBody:data];
+  
+  AFHTTPRequestOperation *requestOperation = [self HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    if (success) {
+      success(responseObject);
+    }
+  } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+    if (failure) {
+      failure(error);
+    }
+  }];
+  
+  [requestOperation setUploadProgressBlock:progress];
+  
+  [self enqueueHTTPRequestOperation:requestOperation];
 }
 
 #pragma mark - AFHTTPClient
